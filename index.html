@@ -208,19 +208,33 @@ td.diff.pos{color:var(--green)}td.diff.neg{color:var(--red)}
 <div id="setup-banner">
   <div class="setup-inner">
     <div class="setup-text">
-      <h3>⚙️ One-Time Firebase Setup — Enables real-time sync between your phone and Elizabeth's</h3>
+      <h3>⚙️ One-Time Setup — Enter these two values once, on any device. All other devices connect automatically.</h3>
       <p>You need a free Firebase Realtime Database. It takes about 5 minutes:</p>
       <ol class="setup-steps">
         <li>Go to <strong>console.firebase.google.com</strong> → sign in with Gmail → click <strong>Add project</strong> → name it <code>burdin-budget</code> → click through to finish</li>
         <li>In the left menu click <strong>Build → Realtime Database</strong> → <strong>Create database</strong> → pick any location → choose <strong>Start in test mode</strong> → Enable</li>
         <li>Copy the database URL shown (looks like <code>https://burdin-budget-xxxx-default-rtdb.firebaseio.com</code>)</li>
         <li>Click the <strong>⚙️ gear</strong> (Project settings) → scroll to <strong>Your apps</strong> → click <strong>&lt;/&gt;</strong> → Register app → copy the <code>apiKey</code> value</li>
-        <li>Paste both values below and click Connect. Then share this same page URL with Elizabeth — she enters the same two values on her device and you're synced.</li>
+        <li>Paste both values below and click Connect. <strong>This is the only device that needs this setup.</strong> Elizabeth just opens the same URL and everything works automatically.</li>
       </ol>
       <div class="setup-row">
         <input class="setup-field" id="fb-apikey" placeholder="API Key  (starts with AIza...)">
         <input class="setup-field" id="fb-dburl"  placeholder="Database URL  (ends with .firebaseio.com)">
         <button class="btn-connect" onclick="connectFirebase()">Connect &amp; Save</button>
+      </div>
+      <!-- After connecting, this shows how to hardcode values -->
+      <div id="hardcode-hint" style="display:none;margin-top:14px;background:#e8f5e9;border-radius:6px;padding:12px 14px">
+        <p style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px">✅ Connected! Now do this one final step to make it permanent for ALL devices (including Elizabeth's):</p>
+        <ol style="padding-left:18px;margin:0">
+          <li style="font-size:12px;color:#1b5e20;margin-bottom:4px">Download the <code>index.html</code> file from GitHub</li>
+          <li style="font-size:12px;color:#1b5e20;margin-bottom:4px">Open it in any text editor (Notepad on Windows, TextEdit on Mac)</li>
+          <li style="font-size:12px;color:#1b5e20;margin-bottom:4px">Find the line that says <code>const FB_CONFIG = {</code> near the top of the script</li>
+          <li style="font-size:12px;color:#1b5e20;margin-bottom:4px">Replace the empty quotes with your values:<br>
+            <code>apiKey: '<span id="hardcode-key" style="font-weight:bold"></span>',</code><br>
+            <code>databaseURL: '<span id="hardcode-url" style="font-weight:bold"></span>',</code>
+          </li>
+          <li style="font-size:12px;color:#1b5e20">Save the file and re-upload it to GitHub (drag it onto your repo and commit). After that, Elizabeth and any other device opens the page and it just works — no setup screen ever again.</li>
+        </ol>
       </div>
     </div>
     <button class="dismiss-btn" onclick="dismissBanner()" title="Dismiss">✕</button>
@@ -522,7 +536,12 @@ const DEFAULTS = {
   months:[],
 };
 
-// ═══════════════ STATE ═══════════════════════════════════════════════
+// ═══════════════ FIREBASE CONFIG — FULLY CONFIGURED ══════════════════
+const FB_CONFIG = {
+  apiKey:      'AIzaSyBWCwVQ0VMS7BhzxPXs0_7eZQOeOqB0WAs',
+  databaseURL: 'https://budget-8d4e3-default-rtdb.firebaseio.com',
+};
+// ═════════════════════════════════════════════════════════════════════
 let data = JSON.parse(JSON.stringify(DEFAULTS));
 let db = null, fbReady = false, saveTimer = null, trendChart = null;
 let modalMode = null, modalEditId = null;
@@ -530,26 +549,49 @@ const MO = ['January','February','March','April','May','June','July','August','S
 const FIXED_IDS = ['housing','transport','utilities','insurance','creditcards','subs'];
 
 // ═══════════════ FIREBASE ════════════════════════════════════════════
+// The Firebase key+URL are stored in localStorage on first setup.
+// The Anthropic API key is stored IN Firebase so it syncs to every device automatically.
+// New devices only need the Firebase key+URL entered once — everything else syncs down.
+
 function connectFirebase() {
   const key = document.getElementById('fb-apikey').value.trim();
   const url = document.getElementById('fb-dburl').value.trim();
   if(!key || !url){ showToast('Please enter both values'); return; }
+  // Save to localStorage
   localStorage.setItem('fb_key', key);
   localStorage.setItem('fb_url', url);
+  FB_CONFIG.apiKey = key;
+  FB_CONFIG.databaseURL = url;
+  // Tell user to re-upload the file with hardcoded values
+  showToast('Connected! See instructions below to make this permanent for all devices.');
+  document.getElementById('hardcode-hint').style.display = 'block';
+  document.getElementById('hardcode-key').textContent  = key;
+  document.getElementById('hardcode-url').textContent  = url;
   initFB(key, url);
 }
 
 function initFB(key, url) {
+  if(!key || !url) return;
   try {
-    // Avoid re-initializing if already done
     let app;
     try { app = firebase.app('budget'); } catch(e) { app = firebase.initializeApp({apiKey:key,databaseURL:url},'budget'); }
     db = firebase.database(app);
     setSyncStatus('saving','Connecting…');
+
+    // Listen to config node first — pulls Anthropic key and any other settings
+    db.ref('config').on('value', snap => {
+      const cfg = snap.val();
+      if(cfg && cfg.anthropicKey) {
+        // Store synced Anthropic key locally for this session
+        localStorage.setItem('ai_api_key', cfg.anthropicKey);
+        initApiKeyUI();
+      }
+    });
+
+    // Listen to budget data
     db.ref('budget').on('value', snap => {
       const val = snap.val();
       if(val) {
-        // Merge remote into defaults to handle schema additions
         data = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), val);
         if(!Array.isArray(data.months)) data.months = val.months ? Object.values(val.months) : [];
       } else {
@@ -558,7 +600,7 @@ function initFB(key, url) {
       fbReady = true;
       setSyncStatus('live','Live sync ✓');
       document.getElementById('setup-banner').classList.add('hidden');
-      document.getElementById('header-sub').textContent = 'Synced with Firebase — changes appear on both phones instantly';
+      document.getElementById('header-sub').textContent = 'Synced — changes appear on all devices instantly';
       renderAll();
     }, err => {
       setSyncStatus('error','Sync error');
@@ -933,14 +975,23 @@ let importHistory  = JSON.parse(localStorage.getItem('import_history')||'[]');
 function saveApiKey() {
   const k = document.getElementById('ai-api-key-input').value.trim();
   if(!k){ showToast('Please enter a key'); return; }
+  // Save locally for this session
   localStorage.setItem('ai_api_key', k);
+  // Push to Firebase so ALL devices get it automatically
+  if(db && fbReady) {
+    db.ref('config/anthropicKey').set(k).then(()=>{
+      showToast('API key saved & synced to all devices!');
+    }).catch(()=>{ showToast('API key saved locally'); });
+  } else {
+    showToast('API key saved locally (connect Firebase to sync to all devices)');
+  }
   document.getElementById('ai-api-key-input').value = '••••••••••••' + k.slice(-6);
   document.getElementById('ai-key-status').textContent = '✓ Set';
   document.getElementById('ai-key-status').style.color = '#4caf50';
-  showToast('API key saved!');
 }
 function clearApiKey() {
   localStorage.removeItem('ai_api_key');
+  if(db && fbReady) db.ref('config/anthropicKey').remove();
   document.getElementById('ai-api-key-input').value = '';
   document.getElementById('ai-key-status').textContent = 'Not set';
   document.getElementById('ai-key-status').style.color = 'rgba(255,255,255,.5)';
@@ -1317,21 +1368,22 @@ function renderImportHistory() {
 
 
 (function(){
-  // Load local snapshot first so page isn't blank
+  // Pre-load Anthropic key so AI Import works immediately on any device
+  const ANTHROPIC_KEY = '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';
+  if(!localStorage.getItem('ai_api_key')) localStorage.setItem('ai_api_key', ANTHROPIC_KEY);
+
+  // Load local snapshot first so page isn't blank while Firebase connects
   const local = localStorage.getItem('burdin_local');
   if(local) { try { Object.assign(data, JSON.parse(local)); } catch(e){} }
   renderAll();
   initApiKeyUI();
 
-  // Auto-connect if credentials saved
-  const key = localStorage.getItem('fb_key');
-  const url = localStorage.getItem('fb_url');
-  if(key && url) {
-    document.getElementById('fb-apikey').value = key;
-    document.getElementById('fb-dburl').value  = url;
+  // If Firebase credentials are hardcoded in FB_CONFIG, connect immediately — no setup needed
+  if(FB_CONFIG.apiKey && FB_CONFIG.databaseURL) {
     document.getElementById('setup-banner').classList.add('hidden');
-    initFB(key, url);
+    initFB(FB_CONFIG.apiKey, FB_CONFIG.databaseURL);
   }
+  // Otherwise show setup banner for first-time configuration
 })();
 </script>
 </body>
