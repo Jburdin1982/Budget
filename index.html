@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burdin Family Budget</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1a2744;--navy-mid:#253461;--gold:#c9933a;--green:#1a6b4a;--green-light:#e6f4ee;
+  --red:#b83232;--red-light:#fceaea;--amber:#b87a1a;--amber-light:#fdf3e3;--blue:#2e5ba8;--blue-light:#e8eef8;
+  --gray-50:#f8f7f4;--gray-100:#f0eeea;--gray-200:#e0ddd7;--gray-400:#9a9690;--gray-600:#5a5650;--gray-800:#2a2620;--white:#ffffff;
+  --shadow:0 2px 12px rgba(26,39,68,.08);--shadow-lg:0 8px 32px rgba(26,39,68,.14);--radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-800);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* SETUP BANNER */
+#setup-banner{background:#fff8e1;border-bottom:2px solid #ffc107;padding:14px 24px}
+#setup-banner.hidden{display:none}
+.setup-inner{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.setup-text{flex:1}
+.setup-text h3{font-size:14px;font-weight:600;color:#6d4c00;margin-bottom:6px}
+.setup-text p,.setup-steps li{font-size:12px;color:#6d4c00;line-height:1.7}
+.setup-steps{padding-left:18px;margin:6px 0}
+code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:11px}
+.setup-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.setup-field{flex:1;min-width:200px;padding:7px 10px;border:1px solid #ffc107;border-radius:var(--radius-sm);font-size:12px;font-family:'DM Sans',sans-serif;background:#fffdf0}
+.btn-connect{background:#6d4c00;color:#fff;border:none;padding:8px 16px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;font-weight:500}
+.btn-connect:hover{background:#5a3d00}
+.dismiss-btn{background:none;border:none;font-size:20px;cursor:pointer;color:#6d4c00;flex-shrink:0}
+
+/* HEADER */
+.site-header{background:var(--navy);padding:0 24px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-lg)}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:62px}
+.header-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--white);letter-spacing:-.3px}
+.header-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
+.header-actions{display:flex;gap:8px;align-items:center}
+.btn{padding:7px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;border:none}
+.btn-ghost{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.2)}
+.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-gold{background:var(--gold);color:var(--white)}
+.btn-gold:hover{background:#b8832a}
+.sync-pill{font-size:11px;display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.1)}
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sync-dot.live{background:#4caf50;animation:blink 2s infinite}
+.sync-dot.saving{background:#ffc107}
+.sync-dot.error{background:#f44336}
+.sync-dot.local{background:#9e9e9e}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* TABS */
+.tab-bar{background:var(--navy-mid);padding:0 24px;display:flex;overflow-x:auto}
+.tab-bar::-webkit-scrollbar{height:0}
+.tab-btn{padding:11px 18px;font-size:12px;font-weight:500;color:rgba(255,255,255,.5);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.tab-btn:hover{color:rgba(255,255,255,.8)}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:22px}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* CARDS */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:22px}
+.summary-card{background:var(--white);border-radius:var(--radius);padding:15px 17px;box-shadow:var(--shadow);border-top:3px solid var(--gray-200)}
+.summary-card.income{border-top-color:var(--green)}.summary-card.fixed{border-top-color:var(--red)}
+.summary-card.variable{border-top-color:var(--amber)}.summary-card.savings{border-top-color:var(--blue)}
+.summary-card.buffer{border-top-color:var(--gold);background:var(--navy)}
+.sc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400)}
+.buffer .sc-label{color:rgba(255,255,255,.4)}
+.sc-value{font-family:'Playfair Display',serif;font-size:25px;margin-top:3px;letter-spacing:-.5px}
+.income .sc-value{color:var(--green)}.fixed .sc-value{color:var(--red)}.variable .sc-value{color:var(--amber)}
+.savings .sc-value{color:var(--blue)}.buffer .sc-value{color:var(--white)}
+.sc-sub{font-size:10px;color:var(--gray-400);margin-top:2px}.buffer .sc-sub{color:rgba(255,255,255,.3)}
+
+/* CHART */
+.chart-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:14px}
+.chart-title{font-family:'Playfair Display',serif;font-size:17px}
+.chart-subtitle{font-size:11px;color:var(--gray-400);margin:2px 0 14px}
+.chart-wrap{position:relative;width:100%;height:240px}
+.chart-empty{text-align:center;padding:40px 20px;color:var(--gray-400);font-size:13px;line-height:1.6}
+.chart-legend{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;font-size:11px;color:var(--gray-600)}
+.leg{display:flex;align-items:center;gap:5px}
+.leg-dot{width:10px;height:10px;border-radius:2px}
+
+/* PROJECTION */
+.proj-card{background:var(--navy);border-radius:var(--radius);padding:20px 22px;color:var(--white);margin-bottom:14px}
+.proj-title{font-family:'Playfair Display',serif;font-size:17px;margin-bottom:14px}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.proj-item{text-align:center}
+.proj-val{font-family:'Playfair Display',serif;font-size:22px;color:#7dd3b0}
+.proj-label{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
+
+/* SECTIONS */
+.section{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.section-header{background:var(--navy);padding:11px 17px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.section-header:hover{background:var(--navy-mid)}
+.sh-title{font-size:11px;font-weight:600;color:var(--white);text-transform:uppercase;letter-spacing:.07em}
+.sh-sub{font-size:10px;color:rgba(255,255,255,.38);margin-top:2px}
+.sh-right{display:flex;align-items:center;gap:10px}
+.sh-total{font-family:'Playfair Display',serif;font-size:14px;color:rgba(255,255,255,.8)}
+.sh-chevron{color:rgba(255,255,255,.35);transition:transform .2s}
+.section.collapsed .sh-chevron{transform:rotate(-90deg)}
+.section.collapsed .section-body{display:none}
+
+/* TABLE */
+.budget-table{width:100%;border-collapse:collapse}
+.budget-table thead th{padding:7px 13px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400);text-align:right;background:var(--gray-50);border-bottom:1px solid var(--gray-200)}
+.budget-table thead th:first-child{text-align:left}.budget-table thead th:last-child{text-align:left}
+.budget-row td{padding:9px 13px;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+.budget-row:last-child td{border-bottom:none}.budget-row:hover td{background:var(--gray-50)}
+.budget-row.flagged td{background:#fffdf0}.budget-row.flagged:hover td{background:#fffbe0}
+.row-name{font-weight:500;font-size:13px}.row-note{font-size:11px;color:var(--gray-400);margin-top:2px;font-weight:300}
+.flag-badge{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;border-radius:3px;background:#fff3cd;color:#856404;margin-left:6px;vertical-align:middle}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.diff{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:13px}
+td.diff.pos{color:var(--green)}td.diff.neg{color:var(--red)}
+.budget-input{width:100%;text-align:right;border:1px solid transparent;border-radius:4px;padding:4px 5px;font-size:13px;font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;background:transparent;color:var(--blue);font-weight:600;transition:all .15s;cursor:pointer}
+.budget-input:hover{border-color:var(--gray-200);background:var(--gray-50)}.budget-input:focus{border-color:var(--blue);background:var(--white);outline:none;box-shadow:0 0 0 3px rgba(46,91,168,.1)}
+.actual-input{width:100%;text-align:right;border:1px solid transparent;border-radius:4px;padding:4px 5px;font-size:13px;font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;background:transparent;color:var(--gray-600);transition:all .15s;cursor:pointer}
+.actual-input:hover{border-color:var(--gray-200);background:var(--gray-50)}.actual-input:focus{border-color:var(--gray-400);background:var(--white);outline:none;box-shadow:0 0 0 3px rgba(0,0,0,.05)}
+.subtotal-row td{background:#eef2fb;padding:8px 13px;font-weight:600;font-size:12px;border-top:1px solid #d0d9f0;border-bottom:2px solid #d0d9f0}
+.subtotal-row .sub-label,.subtotal-row .sub-val{color:var(--navy-mid)}.subtotal-row .sub-val{text-align:right;font-variant-numeric:tabular-nums}
+.subtotal-row .sub-diff{text-align:right;font-variant-numeric:tabular-nums}
+.subtotal-row .sub-diff.pos{color:var(--green)}.subtotal-row .sub-diff.neg{color:var(--red)}
+
+/* TRACKER */
+.month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:14px}
+.month-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.month-card-header{background:var(--navy);padding:12px 17px;display:flex;justify-content:space-between;align-items:center}
+.mc-month{font-family:'Playfair Display',serif;font-size:16px;color:var(--white)}
+.mc-year{font-size:11px;color:rgba(255,255,255,.4)}
+.mc-status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.mc-status.good{background:var(--green-light);color:var(--green)}.mc-status.warn{background:var(--amber-light);color:var(--amber)}.mc-status.bad{background:var(--red-light);color:var(--red)}
+.month-card-body{padding:13px 17px}
+.mc-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--gray-100)}
+.mc-row:last-child{border-bottom:none}.mc-row-label{color:var(--gray-600)}.mc-row-val{font-weight:500;font-variant-numeric:tabular-nums}
+.mc-total{margin-top:9px;padding-top:9px;border-top:2px solid var(--gray-200);display:flex;justify-content:space-between;font-weight:600}
+.mc-total-val{font-family:'Playfair Display',serif;font-size:17px}
+.mc-total-val.pos{color:var(--green)}.mc-total-val.neg{color:var(--red)}
+.add-month-btn{background:var(--white);border:2px dashed var(--gray-200);border-radius:var(--radius);padding:30px;text-align:center;cursor:pointer;transition:all .15s;color:var(--gray-400);font-size:13px}
+.add-month-btn:hover{border-color:var(--navy);color:var(--navy)}
+
+/* SAVINGS PAGE */
+.savings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:13px;margin-bottom:22px}
+.savings-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;position:relative}
+.savings-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0}
+.savings-card.college::before{background:var(--blue)}.savings-card.emergency::before{background:var(--green)}
+.savings-card.vacation::before{background:var(--gold)}.savings-card.christmas::before{background:var(--red)}.savings-card.taxes::before{background:var(--amber)}
+.sv-icon{font-size:22px;margin-bottom:5px}.sv-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400)}
+.sv-goal{font-size:11px;color:var(--gray-400)}.sv-pct{font-size:11px;font-weight:600;color:var(--gray-600);margin:8px 0 3px}
+.sv-bar{height:5px;background:var(--gray-100);border-radius:3px;overflow:hidden}
+.sv-fill{height:100%;border-radius:3px;transition:width .5s}
+.college .sv-fill{background:var(--blue)}.emergency .sv-fill{background:var(--green)}
+.vacation .sv-fill{background:var(--gold)}.christmas .sv-fill{background:var(--red)}.taxes .sv-fill{background:var(--amber)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,39,68,.6);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-lg);width:520px;max-width:95vw;max-height:88vh;overflow-y:auto;transform:translateY(14px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{background:var(--navy);padding:17px 21px;display:flex;justify-content:space-between;align-items:center}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--white)}
+.modal-close{background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;padding:0 4px}
+.modal-close:hover{color:var(--white)}
+.modal-body{padding:20px}
+.form-group{margin-bottom:13px}
+.form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-600);margin-bottom:5px;display:block}
+.form-input{width:100%;padding:8px 11px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px;font-family:'DM Sans',sans-serif;color:var(--gray-800);background:var(--gray-50);transition:border-color .15s}
+.form-input:focus{outline:none;border-color:var(--navy);background:var(--white)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.modal-footer{padding:13px 21px;border-top:1px solid var(--gray-100);display:flex;gap:10px;justify-content:flex-end}
+.btn-secondary{background:var(--gray-100);color:var(--gray-600);border:1px solid var(--gray-200)}.btn-secondary:hover{background:var(--gray-200)}
+.btn-primary{background:var(--navy);color:var(--white)}.btn-primary:hover{background:var(--navy-mid)}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:var(--white);padding:11px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .25s;z-index:9999;border-left:3px solid var(--gold)}
+.toast.show{transform:translateY(0);opacity:1}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.dz-over{border-color:var(--navy) !important;background:var(--blue-light);}
+.file-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--gray-50);border-radius:var(--radius-sm);margin-bottom:6px;font-size:13px}
+.file-item-icon{font-size:18px;flex-shrink:0}
+.file-item-name{flex:1;font-weight:500;color:var(--gray-800)}
+.file-item-acct{font-size:11px;color:var(--gray-400)}
+.file-item-remove{background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:16px;padding:0 4px}
+.file-item-remove:hover{color:var(--red)}
+.preview-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px}
+.preview-row:last-child{border-bottom:none}
+.preview-label{color:var(--gray-600);font-weight:400}
+.preview-val{font-weight:600;font-variant-numeric:tabular-nums}
+.preview-input{text-align:right;border:1px solid var(--gray-200);border-radius:4px;padding:4px 8px;font-size:13px;font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;background:var(--white);color:var(--gray-800);width:110px}
+.preview-input:focus{outline:none;border-color:var(--blue)}
+.acct-badge-sm{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600;background:var(--blue-light);color:var(--blue);margin-left:6px}
+.import-hist-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:12px}
+.import-hist-row:last-child{border-bottom:none}
+  .main{padding:13px}
+  .summary-grid{grid-template-columns:repeat(2,1fr)}
+  .budget-table thead th:nth-child(4),.budget-table td:nth-child(4){display:none}
+  .form-grid{grid-template-columns:1fr}
+  .header-actions .btn-ghost{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP BANNER -->
+<div id="setup-banner">
+  <div class="setup-inner">
+    <div class="setup-text">
+      <h3>⚙️ One-Time Setup — Enter these two values once, on any device. All other devices connect automatically.</h3>
+      <p>You need a free Firebase Realtime Database. It takes about 5 minutes:</p>
+      <ol class="setup-steps">
+        <li>Go to <strong>console.firebase.google.com</strong> → sign in with Gmail → click <strong>Add project</strong> → name it <code>burdin-budget</code> → click through to finish</li>
+        <li>In the left menu click <strong>Build → Realtime Database</strong> → <strong>Create database</strong> → pick any location → choose <strong>Start in test mode</strong> → Enable</li>
+        <li>Copy the database URL shown (looks like <code>https://burdin-budget-xxxx-default-rtdb.firebaseio.com</code>)</li>
+        <li>Click the <strong>⚙️ gear</strong> (Project settings) → scroll to <strong>Your apps</strong> → click <strong>&lt;/&gt;</strong> → Register app → copy the <code>apiKey</code> value</li>
+        <li>Paste both values below and click Connect. <strong>This is the only device that needs this setup.</strong> Elizabeth just opens the same URL and everything works automatically.</li>
+      </ol>
+      <div class="setup-row">
+        <input class="setup-field" id="fb-apikey" placeholder="API Key  (starts with AIza...)">
+        <input class="setup-field" id="fb-dburl"  placeholder="Database URL  (ends with .firebaseio.com)">
+        <button class="btn-connect" onclick="connectFirebase()">Connect &amp; Save</button>
+      </div>
+      <!-- After connecting, this shows how to hardcode values -->
+      <div id="hardcode-hint" style="display:none;margin-top:14px;background:#e8f5e9;border-radius:6px;padding:12px 14px">
+        <p style="font-size:12px;font-weight:600;color:#1b5e20;margin-bottom:6px">✅ Connected! Now do this one final step to make it permanent for ALL devices (including Elizabeth's):</p>
+        <ol style="padding-left:18px;margin:0">
+          <li style="font-size:12px;color:#1b5e20;margin-bottom:4px">Download the <code>index.html</code> file from GitHub</li>
+          <li style="font-size:12px;color:#1b5e20;margin-bottom:4px">Open it in any text editor (Notepad on Windows, TextEdit on Mac)</li>
+          <li style="font-size:12px;color:#1b5e20;margin-bottom:4px">Find the line that says <code>const FB_CONFIG = {</code> near the top of the script</li>
+          <li style="font-size:12px;color:#1b5e20;margin-bottom:4px">Replace the empty quotes with your values:<br>
+            <code>apiKey: '<span id="hardcode-key" style="font-weight:bold"></span>',</code><br>
+            <code>databaseURL: '<span id="hardcode-url" style="font-weight:bold"></span>',</code>
+          </li>
+          <li style="font-size:12px;color:#1b5e20">Save the file and re-upload it to GitHub (drag it onto your repo and commit). After that, Elizabeth and any other device opens the page and it just works — no setup screen ever again.</li>
+        </ol>
+      </div>
+    </div>
+    <button class="dismiss-btn" onclick="dismissBanner()" title="Dismiss">✕</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div>
+      <div class="header-title">Burdin Family Budget</div>
+      <div class="header-sub" id="header-sub">Not connected to Firebase yet</div>
+    </div>
+    <div class="header-actions">
+      <div class="sync-pill">
+        <div class="sync-dot local" id="sync-dot"></div>
+        <span id="sync-label" style="color:rgba(255,255,255,.55);font-size:11px">Local only</span>
+      </div>
+      <button class="btn btn-ghost" onclick="exportData()">Export</button>
+      <button class="btn btn-gold" onclick="forceSave()">Save</button>
+    </div>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab-btn" onclick="showTab('budget',this)">Budget</button>
+  <button class="tab-btn" onclick="showTab('tracker',this)">Monthly Tracker</button>
+  <button class="tab-btn" onclick="showTab('savings',this)">Savings Goals</button>
+  <button class="tab-btn" onclick="showTab('import',this)">🤖 AI Import</button>
+</nav>
+
+<main class="main">
+
+  <!-- OVERVIEW -->
+  <div id="tab-overview" class="tab-panel active">
+    <div class="summary-grid">
+      <div class="summary-card income"><div class="sc-label">Monthly Income</div><div class="sc-value" id="ov-income">—</div><div class="sc-sub">Joey + Elizabeth</div></div>
+      <div class="summary-card fixed"><div class="sc-label">Fixed Expenses</div><div class="sc-value" id="ov-fixed">—</div><div class="sc-sub">Bills, loans, insurance</div></div>
+      <div class="summary-card variable"><div class="sc-label">Variable Budget</div><div class="sc-value" id="ov-variable">—</div><div class="sc-sub">Food, shopping, lifestyle</div></div>
+      <div class="summary-card savings"><div class="sc-label">Savings Target</div><div class="sc-value" id="ov-savings">—</div><div class="sc-sub">All accounts combined</div></div>
+      <div class="summary-card buffer"><div class="sc-label">Monthly Buffer</div><div class="sc-value" id="ov-buffer">—</div><div class="sc-sub">Unallocated surplus</div></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Savings Balance Trend</div>
+      <div class="chart-subtitle">Total across all 5 accounts month over month — add entries in Monthly Tracker to build this chart</div>
+      <div id="chart-empty" class="chart-empty">No monthly data yet. Go to the <strong>Monthly Tracker</strong> tab and add your first month to see the trend here.</div>
+      <div class="chart-wrap" id="chart-wrap" style="display:none"><canvas id="trend-chart"></canvas></div>
+      <div class="chart-legend" id="chart-legend" style="display:none">
+        <div class="leg"><div class="leg-dot" style="background:#1a6b4a"></div>Total Savings Balance</div>
+        <div class="leg"><div class="leg-dot" style="background:#2e5ba8"></div>Monthly Surplus / Deficit</div>
+      </div>
+    </div>
+
+    <div class="proj-card">
+      <div class="proj-title">Annual Projection — On Budget</div>
+      <div class="proj-grid">
+        <div class="proj-item"><div class="proj-val" id="proj-income">—</div><div class="proj-label">Annual income</div></div>
+        <div class="proj-item"><div class="proj-val" id="proj-expenses">—</div><div class="proj-label">Annual expenses</div></div>
+        <div class="proj-item"><div class="proj-val" id="proj-saved">—</div><div class="proj-label">Into savings</div></div>
+        <div class="proj-item"><div class="proj-val" id="proj-buffer">—</div><div class="proj-label">Buffer (12 mo)</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div><div class="sh-title">Top Action Items</div><div class="sh-sub">Biggest opportunities right now</div></div>
+        <div class="sh-right"><span class="sh-chevron">▾</span></div>
+      </div>
+      <div class="section-body">
+        <table class="budget-table">
+          <thead><tr><th>Item</th><th>6-Mo Actual</th><th>Target</th><th>Monthly Saving</th><th>How</th></tr></thead>
+          <tbody>
+            <tr class="budget-row flagged"><td><div class="row-name">Dining out</div></td><td class="num" style="color:var(--red)">$1,157</td><td class="num">$600</td><td class="num" style="color:var(--green);font-weight:600">$557</td><td><div class="row-note">Cut steakhouses 7→2/mo · reduce daily fast food</div></td></tr>
+            <tr class="budget-row flagged"><td><div class="row-name">Amazon</div></td><td class="num" style="color:var(--red)">$559</td><td class="num">$250</td><td class="num" style="color:var(--green);font-weight:600">$309</td><td><div class="row-note">24-hour cart rule before buying</div></td></tr>
+            <tr class="budget-row flagged"><td><div class="row-name">Walmart</div></td><td class="num" style="color:var(--red)">$610</td><td class="num">$400</td><td class="num" style="color:var(--green);font-weight:600">$210</td><td><div class="row-note">Reduce impulse online orders</div></td></tr>
+            <tr class="budget-row flagged"><td><div class="row-name">Verizon</div></td><td class="num" style="color:var(--amber)">$267</td><td class="num">$167</td><td class="num" style="color:var(--green);font-weight:600">$100</td><td><div class="row-note">Call to renegotiate plan · device payments are fixed</div></td></tr>
+            <tr class="budget-row flagged"><td><div class="row-name">DoorDash / delivery</div></td><td class="num" style="color:var(--red)">$189</td><td class="num">$75</td><td class="num" style="color:var(--green);font-weight:600">$114</td><td><div class="row-note">On top of dining out — pick one or the other</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET -->
+  <div id="tab-budget" class="tab-panel">
+    <p style="font-size:12px;color:var(--gray-400);margin-bottom:14px">Click any <span style="color:var(--blue);font-weight:600">blue number</span> to edit your budget target. Click any actual amount to update it. Changes sync instantly to both phones.</p>
+    <div id="budget-sections"></div>
+  </div>
+
+  <!-- TRACKER -->
+  <div id="tab-tracker" class="tab-panel">
+    <p style="font-size:12px;color:var(--gray-400);margin-bottom:14px">Log your actual spending each month. The savings balance you enter here drives the trend chart on the Overview tab.</p>
+    <div class="month-grid" id="month-grid">
+      <div class="add-month-btn" onclick="openAddMonth()">
+        <div style="font-size:28px;margin-bottom:8px">＋</div>
+        Add this month
+      </div>
+    </div>
+  </div>
+
+  <!-- AI IMPORT -->
+  <div id="tab-import" class="tab-panel">
+
+    <!-- API KEY SETUP -->
+    <div id="ai-key-setup" class="section" style="margin-bottom:14px">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div><div class="sh-title">Anthropic API Key</div><div class="sh-sub">Required once — stored in your browser</div></div>
+        <div class="sh-right"><span id="ai-key-status" style="font-size:11px;color:rgba(255,255,255,.5)">Not set</span><span class="sh-chevron">▾</span></div>
+      </div>
+      <div class="section-body" style="padding:18px 20px">
+        <p style="font-size:12px;color:var(--gray-600);margin-bottom:12px;line-height:1.6">
+          Get your API key from <strong>console.anthropic.com</strong> → API Keys → Create Key.
+          Add $5 in credits — that covers 150+ imports at ~$0.03 each.
+          Your key is stored only in this browser, never sent anywhere except directly to Anthropic.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input id="ai-api-key-input" type="password" placeholder="sk-ant-api03-..." class="form-input" style="flex:1;min-width:260px;font-family:monospace;font-size:12px">
+          <button class="btn btn-primary" onclick="saveApiKey()">Save Key</button>
+          <button class="btn btn-secondary" onclick="clearApiKey()">Clear</button>
+        </div>
+        <p style="font-size:11px;color:var(--gray-400);margin-top:8px">Cost estimate: ~$0.02–0.05 per full import (all 7 files). A $5 credit lasts over a year of monthly imports.</p>
+      </div>
+    </div>
+
+    <!-- DROP ZONE -->
+    <div class="chart-card" style="margin-bottom:14px">
+      <div class="chart-title">Upload Bank Files</div>
+      <div class="chart-subtitle">Drop 1–7 XLS files from your bank. The AI will read all accounts and auto-fill the Monthly Tracker for the detected month.</div>
+
+      <div id="drop-zone"
+        ondragover="event.preventDefault();this.classList.add('dz-over')"
+        ondragleave="this.classList.remove('dz-over')"
+        ondrop="handleDrop(event)"
+        onclick="document.getElementById('file-input').click()"
+        style="border:2px dashed var(--gray-200);border-radius:var(--radius);padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px">
+        <div style="font-size:36px;margin-bottom:10px">📂</div>
+        <div style="font-size:14px;font-weight:500;color:var(--gray-600)">Drop your XLS bank files here</div>
+        <div style="font-size:12px;color:var(--gray-400);margin-top:4px">or click to browse — accepts 1 to 7 files at once</div>
+        <div style="font-size:11px;color:var(--gray-400);margin-top:8px">AccountHistory.xls, AccountHistory__1_.xls, etc.</div>
+      </div>
+      <input type="file" id="file-input" multiple accept=".xls,.xlsx,.csv" style="display:none" onchange="handleFileInput(this.files)">
+
+      <!-- FILE LIST -->
+      <div id="file-list" style="display:none;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);margin-bottom:8px">Files ready to analyze</div>
+        <div id="file-items"></div>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="analyze-btn" onclick="analyzeFiles()">🤖 Analyze with AI</button>
+          <button class="btn btn-secondary" onclick="clearFiles()">Clear files</button>
+        </div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div id="ai-progress" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--blue-light);border-radius:var(--radius-sm)">
+          <div style="width:20px;height:20px;border:2px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--blue)" id="progress-label">Reading files…</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:2px" id="progress-sub">This takes about 10–20 seconds</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIEW / CONFIRM -->
+    <div id="ai-preview" style="display:none">
+      <div class="chart-card">
+        <div class="chart-title">AI Analysis Results</div>
+        <div class="chart-subtitle" id="preview-subtitle">Review what the AI found before saving</div>
+
+        <div id="preview-body"></div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="confirmImport()" style="font-size:13px;padding:10px 20px">✓ Save to Monthly Tracker</button>
+          <button class="btn btn-secondary" onclick="cancelImport()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="chart-card">
+      <div class="chart-title" style="font-size:14px">Import History</div>
+      <div id="import-history-body">
+        <div style="font-size:12px;color:var(--gray-400);padding:12px 0">No imports yet. Upload your bank files above to get started.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SAVINGS -->
+  <div id="tab-savings" class="tab-panel">
+    <p style="font-size:12px;color:var(--gray-400);margin-bottom:14px">Click any balance to update it as your accounts grow.</p>
+    <div class="savings-grid" id="savings-grid"></div>
+  </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Month</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase & Chart.js -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// ═══════════════ DEFAULTS ════════════════════════════════════════════
+const DEFAULTS = {
+  income:[
+    {id:'inc1',name:'Joey — NicePak Products',budgeted:7187,actual:7187,note:'Biweekly direct deposit · primary income'},
+    {id:'inc2',name:'Elizabeth — Encore Bank payroll',budgeted:3520,actual:3520,note:'Through account 3652 · biweekly'},
+  ],
+  sections:[
+    {id:'housing',title:'FIXED — HOUSING & LOANS',sub:'Cannot reduce without a specific decision',collapsed:false,items:[
+      {id:'h1',name:'Mortgage / home payment',budgeted:1013,actual:1013,note:'EFT auto-draft $1,013.05 on 1st–3rd each month',flag:false},
+      {id:'h2',name:'GreenSky home improvement loan',budgeted:160,actual:160,note:'$160.35 exactly each month',flag:false},
+      {id:'h3',name:'Aqua Finance (water system loan)',budgeted:216,actual:216,note:'$215.53 exactly each month',flag:false},
+    ]},
+    {id:'transport',title:'FIXED — TRANSPORTATION',sub:'',collapsed:false,items:[
+      {id:'t1',name:'Car payment — TD Auto Finance',budgeted:518,actual:518,note:'$518.01 exactly each month',flag:false},
+    ]},
+    {id:'utilities',title:'FIXED — UTILITIES & SERVICES',sub:'',collapsed:false,items:[
+      {id:'u1',name:'Electric — CECC',budgeted:345,actual:345,note:'Seasonal $280–$450 · budgeted at 6-mo avg',flag:false},
+      {id:'u2',name:'Phone — Verizon',budgeted:267,actual:267,note:'Plan + device payments · call to negotiate plan portion',flag:true},
+      {id:'u3',name:'Internet — 3E8 Broadband',budgeted:94,actual:94,note:'$93.98 exactly each month',flag:false},
+      {id:'u4',name:'Water / City Light',budgeted:49,actual:49,note:'~$34–$57/mo range',flag:false},
+    ]},
+    {id:'insurance',title:'FIXED — INSURANCE & PROTECTION',sub:'',collapsed:false,items:[
+      {id:'i1',name:'Insurance — AR Farm Bureau',budgeted:427,actual:427,note:'~$305/mo base + 2× ~$724 semi-annual (averaged)',flag:false},
+      {id:'i2',name:'Insurance — Farmers Union',budgeted:49,actual:49,note:'~$49/mo consistent',flag:false},
+      {id:'i3',name:'Life insurance — MassMutual',budgeted:22,actual:22,note:'$21.96/mo',flag:false},
+      {id:'i4',name:'Pest control — Adams Pest',budgeted:81,actual:81,note:'Bi-monthly $81 service',flag:false},
+    ]},
+    {id:'creditcards',title:'FIXED — CREDIT CARD MINIMUMS',sub:'Pay minimums on all · put extra on highest rate',collapsed:false,items:[
+      {id:'cc1',name:'BofA Visa — minimum + extra',budgeted:250,actual:185,note:'Min ~$185 · budgeting $250 to make progress',flag:true},
+      {id:'cc2',name:'Citi CC — autopay minimum',budgeted:56,actual:56,note:'Consistent autopay',flag:false},
+      {id:'cc3',name:'Chase CC — autopay minimum',budgeted:35,actual:35,note:'Consistent autopay',flag:false},
+      {id:'cc4',name:'Amex CC — autopay minimum',budgeted:40,actual:40,note:'Consistent autopay',flag:false},
+      {id:'cc5',name:'Comenity CC — autopay minimum',budgeted:18,actual:18,note:'Variable avg $18',flag:false},
+      {id:'cc6',name:'Capital One CC — minimum',budgeted:25,actual:25,note:'$25/mo · pay off first',flag:false},
+    ]},
+    {id:'subs',title:'FIXED — SUBSCRIPTIONS',sub:'',collapsed:false,items:[
+      {id:'s1',name:'Streaming (Hulu, Netflix, Paramount+, Apple, Vudu)',budgeted:137,actual:137,note:'Review quarterly · cancel unused',flag:false},
+      {id:'s2',name:'Planet Fitness',budgeted:16,actual:16,note:'$16.28/mo',flag:false},
+    ]},
+    {id:'dining',title:'VARIABLE — FOOD & DINING',sub:'Biggest controllable expense',collapsed:false,items:[
+      {id:'d1',name:'Dining out — restaurants',budgeted:600,actual:1157,note:'Cut steakhouses 7→2/mo · reduce daily fast food',flag:true},
+      {id:'d2',name:'Grocery — Harps, Kroger, Aldi, other',budgeted:500,actual:625,note:'Consolidate trips · meal plan',flag:false},
+      {id:'d3',name:'Walmart (grocery + household)',budgeted:400,actual:610,note:'Reduce impulse Walmart.com orders',flag:false},
+      {id:'d4',name:'DoorDash / food delivery',budgeted:75,actual:189,note:'On top of dining — pick ONE',flag:true},
+      {id:'d5',name:'Work vending — 365 Market',budgeted:30,actual:87,note:'49 visits in 45 days · bring snacks from home',flag:true},
+    ]},
+    {id:'shopping',title:'VARIABLE — SHOPPING & LIFESTYLE',sub:'',collapsed:false,items:[
+      {id:'sh1',name:'Amazon',budgeted:250,actual:559,note:'30 orders in 45 days · use 24-hr rule',flag:true},
+      {id:'sh2',name:"Retail (Dillard's, HomeGoods, Academy, TJ Maxx)",budgeted:150,actual:351,note:'Planned purchases only',flag:false},
+      {id:'sh3',name:'Hair & beauty (salon, nails, tanning)',budgeted:150,actual:150,note:'Kept at actual',flag:false},
+      {id:'sh4',name:'Books — Barnes & Noble',budgeted:50,actual:111,note:'Library card saves ~$700/yr',flag:false},
+      {id:'sh5',name:'Entertainment (movies, events, outdoors)',budgeted:200,actual:327,note:'Budget 6–8 outings/mo',flag:false},
+      {id:'sh6',name:'Photography — Ashley King',budgeted:50,actual:75,note:'Confirm if ongoing',flag:false},
+    ]},
+    {id:'auto',title:'VARIABLE — HOME, AUTO & GAS',sub:'',collapsed:false,items:[
+      {id:'a1',name:'Gas — stations + Tanked LLC delivery',budgeted:315,actual:315,note:'Gas stations ~$100 + Tanked LLC delivery ~$215',flag:false},
+      {id:'a2',name:'Hardware / home improvement',budgeted:100,actual:220,note:'Planned projects only',flag:false},
+      {id:'a3',name:'Oil changes (Take 5)',budgeted:40,actual:80,note:'Every ~3 months · budget $40/mo avg',flag:false},
+      {id:'a4',name:'Car wash',budgeted:35,actual:35,note:'Consistent',flag:false},
+    ]},
+    {id:'health',title:'VARIABLE — HEALTH, KIDS & MISC',sub:'',collapsed:false,items:[
+      {id:'m1',name:'Medical & pharmacy',budgeted:150,actual:209,note:'Clinic visits + prescriptions',flag:false},
+      {id:'m2',name:'Pets (vet + Petco/Petsmart)',budgeted:75,actual:86,note:'Consider pet insurance',flag:false},
+      {id:'m3',name:'Kids school / activity fees',budgeted:74,actual:74,note:'Brookland School + activities',flag:false},
+      {id:'m4',name:'Cash App / P2P transfers',budgeted:50,actual:133,note:'Reduce personal transfers',flag:false},
+      {id:'m5',name:'Miscellaneous / irregular checks',budgeted:100,actual:200,note:'Buffer for unexpected',flag:false},
+    ]},
+  ],
+  savingsGoals:[
+    {id:'sv1',name:'College Fund',account:'3393',balance:9806,goal:25000,monthly:300,icon:'🎓',type:'college'},
+    {id:'sv2',name:'Emergency Fund',account:'9369',balance:5428,goal:17500,monthly:300,icon:'🛡️',type:'emergency'},
+    {id:'sv3',name:'Vacation Fund',account:'9419',balance:2161,goal:3600,monthly:150,icon:'✈️',type:'vacation'},
+    {id:'sv4',name:'Christmas Fund',account:'9799',balance:596,goal:1200,monthly:100,icon:'🎄',type:'christmas'},
+    {id:'sv5',name:'Taxes',account:'9129',balance:780,goal:3000,monthly:160,icon:'📋',type:'taxes'},
+  ],
+  months:[],
+};
+
+// ═══════════════ FIREBASE CONFIG — FULLY CONFIGURED ══════════════════
+const FB_CONFIG = {
+  apiKey:      'AIzaSyBWCwVQ0VMS7BhzxPXs0_7eZQOeOqB0WAs',
+  databaseURL: 'https://budget-8d4e3-default-rtdb.firebaseio.com',
+};
+// ═════════════════════════════════════════════════════════════════════
+let data = JSON.parse(JSON.stringify(DEFAULTS));
+let db = null, fbReady = false, saveTimer = null, trendChart = null;
+let modalMode = null, modalEditId = null;
+const MO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const FIXED_IDS = ['housing','transport','utilities','insurance','creditcards','subs'];
+
+// ═══════════════ FIREBASE ════════════════════════════════════════════
+// The Firebase key+URL are stored in localStorage on first setup.
+// The Anthropic API key is stored IN Firebase so it syncs to every device automatically.
+// New devices only need the Firebase key+URL entered once — everything else syncs down.
+
+function connectFirebase() {
+  const key = document.getElementById('fb-apikey').value.trim();
+  const url = document.getElementById('fb-dburl').value.trim();
+  if(!key || !url){ showToast('Please enter both values'); return; }
+  // Save to localStorage
+  localStorage.setItem('fb_key', key);
+  localStorage.setItem('fb_url', url);
+  FB_CONFIG.apiKey = key;
+  FB_CONFIG.databaseURL = url;
+  // Tell user to re-upload the file with hardcoded values
+  showToast('Connected! See instructions below to make this permanent for all devices.');
+  document.getElementById('hardcode-hint').style.display = 'block';
+  document.getElementById('hardcode-key').textContent  = key;
+  document.getElementById('hardcode-url').textContent  = url;
+  initFB(key, url);
+}
+
+function initFB(key, url) {
+  if(!key || !url) return;
+  try {
+    let app;
+    try { app = firebase.app('budget'); } catch(e) { app = firebase.initializeApp({apiKey:key,databaseURL:url},'budget'); }
+    db = firebase.database(app);
+    setSyncStatus('saving','Connecting…');
+
+    // Listen to config node first — pulls Anthropic key and any other settings
+    db.ref('config').on('value', snap => {
+      const cfg = snap.val();
+      if(cfg && cfg.anthropicKey) {
+        // Store synced Anthropic key locally for this session
+        localStorage.setItem('ai_api_key', cfg.anthropicKey);
+        initApiKeyUI();
+      }
+    });
+
+    // Listen to budget data
+    db.ref('budget').on('value', snap => {
+      const val = snap.val();
+      if(val) {
+        data = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), val);
+        if(!Array.isArray(data.months)) data.months = val.months ? Object.values(val.months) : [];
+      } else {
+        db.ref('budget').set(data);
+      }
+      fbReady = true;
+      setSyncStatus('live','Live sync ✓');
+      document.getElementById('setup-banner').classList.add('hidden');
+      document.getElementById('header-sub').textContent = 'Synced — changes appear on all devices instantly';
+      renderAll();
+    }, err => {
+      setSyncStatus('error','Sync error');
+      showToast('Firebase error: ' + err.message);
+    });
+  } catch(e) {
+    setSyncStatus('error','Connection failed');
+    showToast('Could not connect: ' + e.message);
+  }
+}
+
+function pushFB() {
+  if(!db || !fbReady) return;
+  setSyncStatus('saving','Saving…');
+  db.ref('budget').set(data).then(()=>{
+    setSyncStatus('live','Live sync ✓');
+    document.getElementById('header-sub').textContent = 'Saved ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  }).catch(e=>{ setSyncStatus('error','Save failed'); showToast('Save failed: '+e.message); });
+}
+
+function setSyncStatus(state, label) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-label').textContent = label;
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ fbReady ? pushFB() : localSave(); }, 500);
+}
+
+function localSave() { localStorage.setItem('burdin_local', JSON.stringify(data)); }
+function forceSave() { fbReady ? pushFB() : (localSave(), showToast('Saved locally')); }
+function dismissBanner() { document.getElementById('setup-banner').classList.add('hidden'); }
+
+// ═══════════════ CALCULATIONS ════════════════════════════════════════
+function totalIncome()   { return data.income.reduce((s,i)=>s+n(i.budgeted),0); }
+function totalFixed()    { return data.sections.filter(s=>FIXED_IDS.includes(s.id)).reduce((t,s)=>t+s.items.reduce((a,i)=>a+n(i.budgeted),0),0); }
+function totalVariable() { return data.sections.filter(s=>!FIXED_IDS.includes(s.id)).reduce((t,s)=>t+s.items.reduce((a,i)=>a+n(i.budgeted),0),0); }
+function totalSavings()  { return data.savingsGoals.reduce((s,g)=>s+n(g.monthly),0); }
+function monthlyBuffer() { return totalIncome()-totalFixed()-totalVariable()-totalSavings(); }
+function totalBalance()  { return data.savingsGoals.reduce((s,g)=>s+n(g.balance),0); }
+function n(v)  { return Number(v)||0; }
+function pm(s) { return parseFloat(String(s).replace(/[$,\s]/g,''))||0; }
+function fmt(v) { v=n(v); return (v<0?'-$':'$')+Math.abs(Math.round(v)).toLocaleString(); }
+function fmtK(v) { v=n(v); const a=Math.abs(v); return (v<0?'-$':'$')+(a>=1000?(a/1000).toFixed(1)+'k':Math.round(a).toLocaleString()); }
+
+// ═══════════════ RENDER ALL ══════════════════════════════════════════
+function renderAll() {
+  renderOverview();
+  renderBudget();
+  renderTracker();
+  renderSavings();
+  renderChart();
+}
+
+// ═══════════════ OVERVIEW ════════════════════════════════════════════
+function renderOverview() {
+  const inc=totalIncome(),fix=totalFixed(),vr=totalVariable(),sv=totalSavings(),buf=monthlyBuffer();
+  $('ov-income',fmt(inc)); $('ov-fixed',fmt(fix)); $('ov-variable',fmt(vr));
+  $('ov-savings',fmt(sv)); $('ov-buffer',fmt(buf));
+  $('proj-income',fmtK(inc*12)); $('proj-expenses',fmtK((fix+vr)*12));
+  $('proj-saved',fmtK(sv*12)); $('proj-buffer',fmtK(buf*12));
+}
+function $(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
+
+// ═══════════════ TREND CHART ═════════════════════════════════════════
+function renderChart() {
+  const months = [...(data.months||[])].sort((a,b)=>(MO.indexOf(a.month)+n(a.year)*12)-(MO.indexOf(b.month)+n(b.year)*12));
+  const hasData = months.length >= 2;
+  document.getElementById('chart-empty').style.display = hasData?'none':'block';
+  document.getElementById('chart-wrap').style.display  = hasData?'block':'none';
+  document.getElementById('chart-legend').style.display= hasData?'flex':'none';
+  if(!hasData) return;
+
+  const labels    = months.map(m=>m.month.slice(0,3)+' '+String(m.year).slice(2));
+  const balances  = months.map(m=>n(m.totalBalance));
+  const surpluses = months.map(m=>n(m.income)-n(m.expenses));
+
+  if(trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('trend-chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Total Savings Balance',data:balances,borderColor:'#1a6b4a',backgroundColor:'rgba(26,107,74,0.07)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#1a6b4a',fill:true,tension:0.3,yAxisID:'y'},
+      {label:'Monthly Surplus',data:surpluses,borderColor:'#2e5ba8',backgroundColor:'rgba(46,91,168,0.05)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#2e5ba8',fill:true,tension:0.3,yAxisID:'y1'},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#1a2744',titleColor:'rgba(255,255,255,.6)',bodyColor:'#fff',padding:10,
+          callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmt(ctx.raw)}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:11,family:'DM Sans'},color:'#9a9690'}},
+        y:{position:'left',grid:{color:'rgba(0,0,0,.06)'},ticks:{callback:v=>fmtK(v),font:{size:11,family:'DM Sans'},color:'#1a6b4a'},title:{display:true,text:'Savings Balance',font:{size:10},color:'#1a6b4a'}},
+        y1:{position:'right',grid:{drawOnChartArea:false},ticks:{callback:v=>fmtK(v),font:{size:11,family:'DM Sans'},color:'#2e5ba8'},title:{display:true,text:'Monthly Surplus',font:{size:10},color:'#2e5ba8'}},
+      }
+    }
+  });
+}
+
+// ═══════════════ BUDGET ══════════════════════════════════════════════
+function renderBudget() {
+  const c = document.getElementById('budget-sections');
+  c.innerHTML = '';
+
+  // Income
+  const iT = data.income.reduce((s,i)=>s+n(i.budgeted),0);
+  const iSec = mkSec('INCOME','Biweekly payroll averaged to monthly','inc',false);
+  iSec.querySelector('.sh-total').textContent = fmt(iT);
+  const iTbl = mkTbl(['Category','Budget','6-Mo Actual','Difference','Notes']);
+  data.income.forEach(item=>{
+    const d=n(item.budgeted)-n(item.actual);
+    iTbl.querySelector('tbody').innerHTML+=`<tr class="budget-row"><td><div class="row-name">${item.name}</div><div class="row-note">${item.note}</div></td>
+      <td class="num"><input class="budget-input" value="${fmt(item.budgeted)}" onblur="updBudgeted('income','${item.id}',this.value)" onfocus="selAll(this)" onkeydown="eBlur(event)"></td>
+      <td class="num" style="color:var(--gray-600)">${fmt(item.actual)}</td>
+      <td class="diff ${d>=0?'pos':'neg'}">${fmt(d)}</td><td><div class="row-note">${item.note}</div></td></tr>`;
+  });
+  addSub(iTbl.querySelector('tbody'),'Total Income',iT,data.income.reduce((s,i)=>s+n(i.actual),0));
+  iSec.querySelector('.section-body').appendChild(iTbl);
+  c.appendChild(iSec);
+
+  // Sections
+  data.sections.forEach(sec=>{
+    const sT=sec.items.reduce((s,i)=>s+n(i.budgeted),0);
+    const sA=sec.items.reduce((s,i)=>s+n(i.actual),0);
+    const el=mkSec(sec.title,sec.sub,sec.id,sec.collapsed);
+    el.querySelector('.sh-total').textContent=fmt(sT);
+    const tbl=mkTbl(['Category','Budget','6-Mo Actual','Difference','Notes']);
+    sec.items.forEach(item=>{
+      const d=n(item.budgeted)-n(item.actual);
+      tbl.querySelector('tbody').innerHTML+=`<tr class="budget-row ${item.flag?'flagged':''}">
+        <td><div class="row-name">${item.name}${item.flag?'<span class="flag-badge">Action</span>':''}</div><div class="row-note">${item.note}</div></td>
+        <td class="num"><input class="budget-input" value="${fmt(item.budgeted)}" onblur="updBudgeted('section','${item.id}',this.value)" onfocus="selAll(this)" onkeydown="eBlur(event)"></td>
+        <td class="num"><input class="actual-input" value="${fmt(item.actual)}" onblur="updActual('${item.id}',this.value)" onfocus="selAll(this)" onkeydown="eBlur(event)"></td>
+        <td class="diff ${d>=0?'pos':'neg'}">${fmt(d)}</td><td><div class="row-note">${item.note}</div></td></tr>`;
+    });
+    addSub(tbl.querySelector('tbody'),sec.title.replace(/FIXED — |VARIABLE — /,'')+' Total',sT,sA);
+    el.querySelector('.section-body').appendChild(tbl);
+    c.appendChild(el);
+  });
+
+  // Savings
+  const svT=data.savingsGoals.reduce((s,g)=>s+n(g.monthly),0);
+  const svSec=mkSec('SAVINGS ALLOCATIONS','Fund in priority order after all bills are covered','sv',false);
+  svSec.querySelector('.sh-total').textContent=fmt(svT);
+  const svTbl=mkTbl(['Goal','Monthly Target','Current Balance','Progress','Notes']);
+  data.savingsGoals.forEach(g=>{
+    const pct=Math.min(100,Math.round(n(g.balance)/n(g.goal)*100));
+    const pc=pct>=80?'var(--green)':pct>=40?'var(--amber)':'var(--red)';
+    svTbl.querySelector('tbody').innerHTML+=`<tr class="budget-row"><td><div class="row-name">${g.icon} ${g.name}</div><div class="row-note">Acct ${g.account}</div></td>
+      <td class="num"><input class="budget-input" value="${fmt(g.monthly)}" onblur="updSvMo('${g.id}',this.value)" onfocus="selAll(this)" onkeydown="eBlur(event)"></td>
+      <td class="num"><input class="actual-input" value="${fmt(g.balance)}" onblur="updSvBal('${g.id}',this.value)" onfocus="selAll(this)" onkeydown="eBlur(event)"></td>
+      <td><div style="height:5px;background:var(--gray-100);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pc};border-radius:3px"></div></div><div style="font-size:10px;color:var(--gray-400);margin-top:3px">${pct}% of ${fmt(g.goal)}</div></td>
+      <td><div class="row-note">Goal: ${fmt(g.goal)}</div></td></tr>`;
+  });
+  addSub(svTbl.querySelector('tbody'),'Total Savings',svT,totalBalance());
+  svSec.querySelector('.section-body').appendChild(svTbl);
+  c.appendChild(svSec);
+
+  // Summary
+  const buf=monthlyBuffer();
+  const sd=document.createElement('div');
+  sd.innerHTML=`<div style="background:var(--navy);border-radius:var(--radius);padding:18px 22px;margin-top:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);font-weight:600">Monthly Buffer</div>
+      <div style="font-family:'Playfair Display',serif;font-size:28px;color:${buf>=0?'#7dd3b0':'#f08080'};margin-top:2px">${fmt(buf)}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:2px">Annual: ${fmtK(buf*12)}</div></div>
+    <div style="text-align:right;font-size:12px;color:rgba(255,255,255,.5);line-height:1.9">
+      <div>Income: ${fmt(totalIncome())}</div><div>Fixed: −${fmt(totalFixed())}</div>
+      <div>Variable: −${fmt(totalVariable())}</div><div>Savings: −${fmt(totalSavings())}</div></div></div>`;
+  c.appendChild(sd);
+}
+
+function mkSec(title,sub,id,collapsed) {
+  const d=document.createElement('div');
+  d.className='section'+(collapsed?' collapsed':''); d.id='sec-'+id;
+  d.innerHTML=`<div class="section-header" onclick="toggleSection(this)">
+    <div><div class="sh-title">${title}</div>${sub?`<div class="sh-sub">${sub}</div>`:''}</div>
+    <div class="sh-right"><span class="sh-total"></span><span class="sh-chevron">▾</span></div>
+  </div><div class="section-body"></div>`;
+  return d;
+}
+function mkTbl(headers) {
+  const t=document.createElement('table'); t.className='budget-table';
+  t.innerHTML=`<thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody></tbody>`;
+  return t;
+}
+function addSub(tbody,label,bgt,act) {
+  const d=bgt-act;
+  tbody.innerHTML+=`<tr class="subtotal-row"><td class="sub-label">${label}</td><td class="sub-val">${fmt(bgt)}</td><td class="sub-val">${fmt(act)}</td><td class="sub-diff ${d>=0?'pos':'neg'}">${fmt(d)}</td><td></td></tr>`;
+}
+
+// ═══════════════ TRACKER ═════════════════════════════════════════════
+function renderTracker() {
+  const grid=document.getElementById('month-grid');
+  grid.innerHTML=`<div class="add-month-btn" onclick="openAddMonth()"><div style="font-size:28px;margin-bottom:8px">＋</div>Add this month</div>`;
+  [...(data.months||[])].sort((a,b)=>(MO.indexOf(b.month)+n(b.year)*12)-(MO.indexOf(a.month)+n(a.year)*12)).forEach(mo=>{
+    const surplus=n(mo.income)-n(mo.expenses);
+    const sc=surplus>=500?'good':surplus>=0?'warn':'bad';
+    const sl=surplus>=500?'On track':surplus>=0?'Break even':'Over budget';
+    const card=document.createElement('div'); card.className='month-card';
+    card.innerHTML=`<div class="month-card-header"><div><div class="mc-month">${mo.month}</div><div class="mc-year">${mo.year}</div></div><span class="mc-status ${sc}">${sl}</span></div>
+    <div class="month-card-body">
+      <div class="mc-row"><span class="mc-row-label">Income</span><span class="mc-row-val" style="color:var(--green)">${fmt(mo.income)}</span></div>
+      <div class="mc-row"><span class="mc-row-label">Dining out</span><span class="mc-row-val">${fmt(mo.dining||0)}</span></div>
+      <div class="mc-row"><span class="mc-row-label">Groceries + Walmart</span><span class="mc-row-val">${fmt(mo.groceries||0)}</span></div>
+      <div class="mc-row"><span class="mc-row-label">Amazon</span><span class="mc-row-val">${fmt(mo.amazon||0)}</span></div>
+      <div class="mc-row"><span class="mc-row-label">Other expenses</span><span class="mc-row-val">${fmt(mo.other||0)}</span></div>
+      <div class="mc-row"><span class="mc-row-label">Savings balance (all accts)</span><span class="mc-row-val" style="color:var(--green)">${fmt(mo.totalBalance||0)}</span></div>
+      <div class="mc-total"><span>Surplus / deficit</span><span class="mc-total-val ${surplus>=0?'pos':'neg'}">${fmt(surplus)}</span></div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn" style="background:var(--gray-100);color:var(--gray-600);border:1px solid var(--gray-200);font-size:11px;padding:5px 10px" onclick="editMonth('${mo.id}')">Edit</button>
+        <button class="btn" style="background:var(--red-light);color:var(--red);border:1px solid #f5c6c6;font-size:11px;padding:5px 10px" onclick="deleteMonth('${mo.id}')">Delete</button>
+      </div></div>`;
+    grid.insertBefore(card,grid.firstChild);
+  });
+}
+
+function openAddMonth() {
+  modalMode='add'; modalEditId=null;
+  const now=new Date();
+  document.getElementById('modal-title').textContent='Add Monthly Spending';
+  document.getElementById('modal-body').innerHTML=buildMonthForm({month:MO[now.getMonth()],year:now.getFullYear(),income:totalIncome(),dining:0,groceries:0,amazon:0,other:0,totalBalance:totalBalance()});
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function editMonth(id) {
+  modalMode='edit'; modalEditId=id;
+  const mo=(data.months||[]).find(m=>m.id===id); if(!mo) return;
+  document.getElementById('modal-title').textContent=`Edit ${mo.month} ${mo.year}`;
+  document.getElementById('modal-body').innerHTML=buildMonthForm(mo);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function buildMonthForm(mo) {
+  return `<div class="form-grid">
+    <div class="form-group"><label class="form-label">Month</label><select class="form-input" id="mo-month">${MO.map(m=>`<option ${m===mo.month?'selected':''}>${m}</option>`).join('')}</select></div>
+    <div class="form-group"><label class="form-label">Year</label><input class="form-input" type="number" id="mo-year" value="${mo.year}"></div>
+  </div>
+  <div class="form-group"><label class="form-label">Total Income ($)</label><input class="form-input" type="number" id="mo-income" value="${mo.income||0}"></div>
+  <p style="font-size:11px;color:var(--gray-400);margin:-8px 0 12px;font-style:italic">Break down key spending:</p>
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Dining out ($)</label><input class="form-input" type="number" id="mo-dining" value="${mo.dining||0}"></div>
+    <div class="form-group"><label class="form-label">Groceries + Walmart ($)</label><input class="form-input" type="number" id="mo-groceries" value="${mo.groceries||0}"></div>
+    <div class="form-group"><label class="form-label">Amazon ($)</label><input class="form-input" type="number" id="mo-amazon" value="${mo.amazon||0}"></div>
+    <div class="form-group"><label class="form-label">All other expenses ($)</label><input class="form-input" type="number" id="mo-other" value="${mo.other||0}" placeholder="Fixed bills + everything else"></div>
+  </div>
+  <div class="form-group"><label class="form-label">Total savings balance — all 5 accounts combined ($)</label>
+    <input class="form-input" type="number" id="mo-balance" value="${mo.totalBalance||totalBalance()}">
+    <p style="font-size:11px;color:var(--gray-400);margin-top:4px">This is what builds the trend chart. Add up all 5 account balances at month end.</p>
+  </div>
+  <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:11px;font-size:12px;color:var(--gray-600)">
+    💡 "All other expenses" should include your fixed bills (~${fmt(totalFixed())}/mo) plus anything not listed above.
+  </div>`;
+}
+
+function saveModal() {
+  const month=document.getElementById('mo-month').value;
+  const year=parseInt(document.getElementById('mo-year').value)||new Date().getFullYear();
+  const income=parseFloat(document.getElementById('mo-income').value)||0;
+  const dining=parseFloat(document.getElementById('mo-dining').value)||0;
+  const groceries=parseFloat(document.getElementById('mo-groceries').value)||0;
+  const amazon=parseFloat(document.getElementById('mo-amazon').value)||0;
+  const other=parseFloat(document.getElementById('mo-other').value)||0;
+  const tb=parseFloat(document.getElementById('mo-balance').value)||0;
+  const expenses=dining+groceries+amazon+other;
+  if(!data.months) data.months=[];
+  if(modalMode==='add') {
+    data.months.push({id:Date.now().toString(),month,year,income,dining,groceries,amazon,other,expenses,totalBalance:tb});
+  } else {
+    const mo=data.months.find(m=>m.id===modalEditId);
+    if(mo) Object.assign(mo,{month,year,income,dining,groceries,amazon,other,expenses,totalBalance:tb});
+  }
+  scheduleSave(); closeModal(); renderTracker(); renderChart();
+  showToast(`${month} ${year} saved!`);
+}
+
+function deleteMonth(id) {
+  if(!confirm('Delete this month?')) return;
+  data.months=(data.months||[]).filter(m=>m.id!==id);
+  scheduleSave(); renderTracker(); renderChart();
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+// ═══════════════ SAVINGS PAGE ════════════════════════════════════════
+function renderSavings() {
+  const grid=document.getElementById('savings-grid');
+  grid.innerHTML='';
+  data.savingsGoals.forEach(g=>{
+    const pct=Math.min(100,n(g.balance)/n(g.goal)*100);
+    const card=document.createElement('div'); card.className=`savings-card ${g.type}`;
+    card.innerHTML=`<div class="sv-icon">${g.icon}</div><div class="sv-name">${g.name} · Acct ${g.account}</div>
+      <input class="budget-input" type="text" value="${fmt(g.balance)}"
+        style="font-size:24px;font-family:'Playfair Display',serif;width:100%;text-align:left;padding:4px 0"
+        onblur="updSvBal('${g.id}',this.value)" onfocus="selAll(this)" onkeydown="eBlur(event)">
+      <div class="sv-goal">Goal: ${fmt(g.goal)} · +${fmt(g.monthly)}/mo</div>
+      <div class="sv-pct">${Math.round(pct)}% of goal</div>
+      <div class="sv-bar"><div class="sv-fill" style="width:${pct}%"></div></div>`;
+    grid.appendChild(card);
+  });
+  const tot=document.createElement('div'); tot.className='savings-card';
+  tot.style.cssText='background:var(--navy);border-top:3px solid var(--gold)';
+  tot.innerHTML=`<div class="sv-icon">💰</div><div class="sv-name" style="color:rgba(255,255,255,.4)">Total All Accounts</div>
+    <div style="font-family:'Playfair Display',serif;font-size:26px;color:var(--white);margin:5px 0">${fmt(totalBalance())}</div>
+    <div class="sv-goal" style="color:rgba(255,255,255,.3)">Across all 5 savings accounts</div>`;
+  grid.appendChild(tot);
+}
+
+// ═══════════════ UPDATE HANDLERS ════════════════════════════════════
+function updBudgeted(type,id,val) {
+  const v=pm(val);
+  if(type==='income'){const i=data.income.find(x=>x.id===id);if(i)i.budgeted=v;}
+  else{for(const s of data.sections){const i=s.items.find(x=>x.id===id);if(i){i.budgeted=v;break;}}}
+  scheduleSave(); renderAll();
+}
+function updActual(id,val) {
+  const v=pm(val);
+  for(const s of data.sections){const i=s.items.find(x=>x.id===id);if(i){i.actual=v;break;}}
+  scheduleSave(); renderAll();
+}
+function updSvBal(id,val) {
+  const g=data.savingsGoals.find(x=>x.id===id);if(g)g.balance=pm(val);
+  scheduleSave(); renderAll();
+}
+function updSvMo(id,val) {
+  const g=data.savingsGoals.find(x=>x.id===id);if(g)g.monthly=pm(val);
+  scheduleSave(); renderAll();
+}
+
+// ═══════════════ UI HELPERS ══════════════════════════════════════════
+function showTab(name,btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleSection(hdr) { hdr.closest('.section').classList.toggle('collapsed'); }
+function selAll(el) { el.select(); el.setSelectionRange(0,el.value.length); }
+function eBlur(e) { if(e.key==='Enter') e.target.blur(); }
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);
+}
+function exportData() {
+  const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download='burdin_budget_backup.json'; a.click(); showToast('Exported!');
+}
+
+
+// ═══════════════ AI IMPORT ═══════════════════════════════════════════
+
+// Account map — account number suffix → friendly name
+const ACCT_MAP = {
+  '1467':'Bill Account (main bills)',
+  '3652':'Elizabeth Paycheck',
+  '9799':'Christmas Fund',
+  '9129':'Taxes',
+  '9369':'Savings',
+  '9419':'Vacation Fund',
+  '3393':'College Fund',
+};
+
+let pendingFiles   = []; // {name, accountId, rows}
+let pendingPreview = null; // the AI result before confirmation
+let importHistory  = JSON.parse(localStorage.getItem('import_history')||'[]');
+
+// ── API KEY ───────────────────────────────────────────────────────────
+function saveApiKey() {
+  const k = document.getElementById('ai-api-key-input').value.trim();
+  if(!k){ showToast('Please enter a key'); return; }
+  // Save locally for this session
+  localStorage.setItem('ai_api_key', k);
+  // Push to Firebase so ALL devices get it automatically
+  if(db && fbReady) {
+    db.ref('config/anthropicKey').set(k).then(()=>{
+      showToast('API key saved & synced to all devices!');
+    }).catch(()=>{ showToast('API key saved locally'); });
+  } else {
+    showToast('API key saved locally (connect Firebase to sync to all devices)');
+  }
+  document.getElementById('ai-api-key-input').value = '••••••••••••' + k.slice(-6);
+  document.getElementById('ai-key-status').textContent = '✓ Set';
+  document.getElementById('ai-key-status').style.color = '#4caf50';
+}
+function clearApiKey() {
+  localStorage.removeItem('ai_api_key');
+  if(db && fbReady) db.ref('config/anthropicKey').remove();
+  document.getElementById('ai-api-key-input').value = '';
+  document.getElementById('ai-key-status').textContent = 'Not set';
+  document.getElementById('ai-key-status').style.color = 'rgba(255,255,255,.5)';
+  showToast('API key cleared');
+}
+function initApiKeyUI() {
+  const k = localStorage.getItem('ai_api_key');
+  if(k) {
+    document.getElementById('ai-api-key-input').value = '••••••••••••' + k.slice(-6);
+    document.getElementById('ai-key-status').textContent = '✓ Set';
+    document.getElementById('ai-key-status').style.color = '#4caf50';
+  }
+  renderImportHistory();
+}
+
+// ── FILE HANDLING ─────────────────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('dz-over');
+  handleFileInput(e.dataTransfer.files);
+}
+
+function handleFileInput(files) {
+  if(!files || !files.length) return;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const wb = XLSX.read(evt.target.result, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        if(rows.length < 2){ showToast(`${file.name}: No data found`); return; }
+        // Detect account from first data row
+        const acctRaw = String(rows[1][0]||'');
+        const acctId  = Object.keys(ACCT_MAP).find(k => acctRaw.endsWith(k)) || acctRaw.slice(-4);
+        // Remove duplicate if same account already loaded
+        pendingFiles = pendingFiles.filter(f => f.accountId !== acctId);
+        pendingFiles.push({ name:file.name, accountId:acctId, acctName:ACCT_MAP[acctId]||`Acct ${acctId}`, rows });
+        renderFileList();
+      } catch(err) {
+        showToast(`Could not read ${file.name}: ${err.message}`);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  const items = document.getElementById('file-items');
+  if(!pendingFiles.length){ list.style.display='none'; return; }
+  list.style.display = 'block';
+  items.innerHTML = pendingFiles.map((f,i) => `
+    <div class="file-item">
+      <span class="file-item-icon">📊</span>
+      <div style="flex:1">
+        <div class="file-item-name">${f.name}</div>
+        <div class="file-item-acct">${f.acctName} · ${f.rows.length-1} transactions</div>
+      </div>
+      <button class="file-item-remove" onclick="removeFile(${i})" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+function removeFile(i) {
+  pendingFiles.splice(i,1);
+  renderFileList();
+}
+
+function clearFiles() {
+  pendingFiles = [];
+  renderFileList();
+  document.getElementById('ai-preview').style.display = 'none';
+}
+
+// ── AI ANALYSIS ───────────────────────────────────────────────────────
+async function analyzeFiles() {
+  const apiKey = localStorage.getItem('ai_api_key');
+  if(!apiKey){ showToast('Please set your Anthropic API key first'); return; }
+  if(!pendingFiles.length){ showToast('Please add files first'); return; }
+
+  // Show progress
+  document.getElementById('ai-progress').style.display = 'block';
+  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('ai-preview').style.display = 'none';
+  setProgress('Reading transaction data…','Parsing ' + pendingFiles.length + ' file(s)');
+
+  // Build transaction summary per account
+  let transactionText = '';
+  let detectedMonth = null;
+  let detectedYear  = null;
+
+  pendingFiles.forEach(file => {
+    const headers = file.rows[0];
+    const dataRows = file.rows.slice(1).filter(r => r[0] && r[1]);
+    transactionText += `\n\n=== ACCOUNT: ${file.acctName} (${file.accountId}) ===\n`;
+    transactionText += `Columns: ${headers.join(' | ')}\n`;
+
+    dataRows.forEach(row => {
+      // Parse date to detect month
+      const dateVal = row[1];
+      let dateStr = '';
+      if(typeof dateVal === 'number') {
+        // Excel serial date
+        const d = XLSX.SSF.parse_date_code(dateVal);
+        if(d) {
+          dateStr = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+          if(!detectedMonth) { detectedMonth = d.m; detectedYear = d.y; }
+        }
+      } else {
+        dateStr = String(dateVal);
+      }
+      const desc   = String(row[3]||'').slice(0,80);
+      const debit  = row[4] ? Number(row[4]).toFixed(2) : '';
+      const credit = row[5] ? Number(row[5]).toFixed(2) : '';
+      if(desc) transactionText += `${dateStr} | ${desc} | debit:${debit} | credit:${credit}\n`;
+    });
+  });
+
+  setProgress('Sending to Claude AI…','Analyzing spending patterns');
+
+  const MO_NAMES = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthGuess = detectedMonth ? MO_NAMES[detectedMonth] : 'Unknown';
+  const yearGuess  = detectedYear  || new Date().getFullYear();
+
+  const prompt = `You are a financial analyst parsing bank transaction exports for the Burdin family budget tracker.
+
+Analyze the following bank transactions and return a JSON object with the spending breakdown for the month.
+
+ACCOUNT REFERENCE:
+- Bill Account 1467: Main bills account — most expenses come from here
+- Elizabeth Paycheck 3652: Elizabeth's payroll — transfers to bill account
+- Savings 9369, Vacation 9419, Christmas 9799, Taxes 9129, College Fund 3393: Savings accounts
+
+CATEGORIZATION RULES:
+- "income": Total payroll credits ONLY (NICEPAK, ENCORE payroll). Do NOT include inter-account transfers.
+- "dining": Restaurants, fast food, Sonic, Papitos, Colton's, Longhorn, McDonald's, Wings To Go, Marco's Pizza, Waffle House, Outback, Chick-fil-A, KFC, Burger King, Wendy's, pizza, any food establishment
+- "groceries": Harps Food Store, Walmart, Kroger, Aldi, Target, Sam's Club, any grocery/supermarket
+- "amazon": Any Amazon.com, Amazon Marketplace, Amazon MKTPL purchases
+- "doordash": DoorDash, Uber Eats, GrubHub, delivery services, Cash App DoorDash
+- "other": Everything else that is a REAL expense — fixed bills (mortgage EFT $1013, car payment TD Auto $518, insurance Farm Bureau, Verizon, CECC electric, internet 3E8, GreenSky, Aqua Finance, credit card payments), gas (Tanked LLC + gas stations), hardware, medical, shopping, etc.
+- DO NOT count inter-account transfers (Funds Transfer, Transfer from/to ****) as income or expenses
+- DO NOT count savings account deposits as expenses
+
+Also calculate:
+- "totalBalance": Sum of the ending balances of ALL savings accounts provided (9369 + 9419 + 9799 + 9129 + 3393 combined)
+- "month": The month name (e.g. "March")
+- "year": The 4-digit year (e.g. 2026)
+
+The transactions appear to be primarily from: ${monthGuess} ${yearGuess}
+
+TRANSACTION DATA:
+${transactionText}
+
+Respond with ONLY a valid JSON object, no explanation, no markdown, no code fences:
+{
+  "month": "March",
+  "year": 2026,
+  "income": 10707,
+  "dining": 625,
+  "groceries": 918,
+  "amazon": 487,
+  "doordash": 152,
+  "other": 6800,
+  "totalBalance": 18771,
+  "notes": "Brief note about anything unusual found",
+  "accountsAnalyzed": ["1467","3652"]
+}`;
+
+  try {
+    setProgress('Claude is analyzing…','Reading ' + transactionText.split('\n').length + ' transactions');
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{ role:'user', content: prompt }]
+      })
+    });
+
+    if(!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `API error ${response.status}`);
+    }
+
+    const result = await response.json();
+    const text = result.content[0]?.text || '';
+
+    // Parse JSON from response
+    let parsed;
+    try {
+      // Strip any accidental markdown
+      const clean = text.replace(/```json|```/g,'').trim();
+      parsed = JSON.parse(clean);
+    } catch(e) {
+      throw new Error('AI returned unexpected format. Try again.');
+    }
+
+    document.getElementById('ai-progress').style.display = 'none';
+    document.getElementById('analyze-btn').disabled = false;
+    pendingPreview = parsed;
+    showPreview(parsed);
+
+  } catch(err) {
+    document.getElementById('ai-progress').style.display = 'none';
+    document.getElementById('analyze-btn').disabled = false;
+    showToast('Error: ' + err.message);
+    if(err.message.includes('401')) showToast('Invalid API key — check your key in settings above');
+  }
+}
+
+function setProgress(label, sub) {
+  document.getElementById('progress-label').textContent = label;
+  document.getElementById('progress-sub').textContent   = sub;
+}
+
+// ── PREVIEW ───────────────────────────────────────────────────────────
+function showPreview(r) {
+  const expenses = n(r.dining)+n(r.groceries)+n(r.amazon)+n(r.doordash)+n(r.other);
+  const surplus  = n(r.income) - expenses;
+  const accts    = (r.accountsAnalyzed||[]).map(a => `<span class="acct-badge-sm">${ACCT_MAP[a]||a}</span>`).join(' ');
+
+  document.getElementById('preview-subtitle').innerHTML =
+    `AI analyzed ${pendingFiles.length} file(s) for <strong>${r.month} ${r.year}</strong> · Accounts: ${accts||'see below'}`;
+
+  document.getElementById('preview-body').innerHTML = `
+    <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);margin-bottom:10px">Edit any value before saving</div>
+
+      <div class="preview-row">
+        <span class="preview-label">💰 Total income (payroll only)</span>
+        <input class="preview-input" id="pv-income" type="number" value="${Math.round(n(r.income))}">
+      </div>
+      <div class="preview-row" style="background:rgba(183,122,26,.05);border-radius:4px;padding:9px 6px">
+        <span class="preview-label" style="font-weight:500">🍽️ Dining out</span>
+        <input class="preview-input" id="pv-dining" type="number" value="${Math.round(n(r.dining))}">
+      </div>
+      <div class="preview-row">
+        <span class="preview-label">🛒 Groceries + Walmart</span>
+        <input class="preview-input" id="pv-groceries" type="number" value="${Math.round(n(r.groceries))}">
+      </div>
+      <div class="preview-row" style="background:rgba(183,122,26,.05);border-radius:4px;padding:9px 6px">
+        <span class="preview-label" style="font-weight:500">📦 Amazon</span>
+        <input class="preview-input" id="pv-amazon" type="number" value="${Math.round(n(r.amazon))}">
+      </div>
+      <div class="preview-row">
+        <span class="preview-label">🚗 DoorDash / delivery</span>
+        <input class="preview-input" id="pv-doordash" type="number" value="${Math.round(n(r.doordash))}">
+      </div>
+      <div class="preview-row">
+        <span class="preview-label">📄 All other expenses (fixed bills + misc)</span>
+        <input class="preview-input" id="pv-other" type="number" value="${Math.round(n(r.other))}">
+      </div>
+      <div class="preview-row" style="background:var(--green-light);border-radius:4px;padding:9px 6px">
+        <span class="preview-label" style="font-weight:500;color:var(--green)">🏦 Total savings balance (all 5 accounts)</span>
+        <input class="preview-input" id="pv-balance" type="number" value="${Math.round(n(r.totalBalance))}">
+      </div>
+
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-200);display:flex;justify-content:space-between;font-size:13px">
+        <span style="color:var(--gray-600)">Calculated surplus / deficit</span>
+        <span style="font-weight:600;color:${surplus>=0?'var(--green)':'var(--red)'}" id="pv-surplus">${fmt(surplus)}</span>
+      </div>
+    </div>
+
+    ${r.notes ? `<div style="background:#fff8e1;border-radius:var(--radius-sm);padding:11px 14px;font-size:12px;color:#6d4c00;margin-bottom:4px">
+      💬 <strong>AI note:</strong> ${r.notes}
+    </div>` : ''}`;
+
+  // Live-update surplus as user edits
+  ['pv-income','pv-dining','pv-groceries','pv-amazon','pv-doordash','pv-other'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePreviewSurplus);
+  });
+
+  document.getElementById('ai-preview').style.display = 'block';
+  document.getElementById('ai-preview').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function updatePreviewSurplus() {
+  const inc = parseFloat(document.getElementById('pv-income').value)||0;
+  const exp = ['pv-dining','pv-groceries','pv-amazon','pv-doordash','pv-other'].reduce((s,id)=>s+(parseFloat(document.getElementById(id).value)||0),0);
+  const surplus = inc - exp;
+  const el = document.getElementById('pv-surplus');
+  if(el){ el.textContent = fmt(surplus); el.style.color = surplus>=0?'var(--green)':'var(--red)'; }
+}
+
+function confirmImport() {
+  if(!pendingPreview) return;
+  const income    = parseFloat(document.getElementById('pv-income').value)||0;
+  const dining    = parseFloat(document.getElementById('pv-dining').value)||0;
+  const groceries = parseFloat(document.getElementById('pv-groceries').value)||0;
+  const amazon    = parseFloat(document.getElementById('pv-amazon').value)||0;
+  const doordash  = parseFloat(document.getElementById('pv-doordash').value)||0;
+  const other     = parseFloat(document.getElementById('pv-other').value)||0;
+  const balance   = parseFloat(document.getElementById('pv-balance').value)||0;
+  const expenses  = dining + groceries + amazon + doordash + other;
+
+  const month = pendingPreview.month;
+  const year  = pendingPreview.year;
+
+  if(!data.months) data.months = [];
+
+  // Replace existing entry for same month/year if exists
+  const existingIdx = data.months.findIndex(m => m.month===month && String(m.year)===String(year));
+  const entry = {
+    id: existingIdx>=0 ? data.months[existingIdx].id : Date.now().toString(),
+    month, year, income,
+    dining, groceries, amazon,
+    other: doordash + other,  // combine doordash into other for tracker display
+    expenses, totalBalance: balance,
+    importedAt: new Date().toISOString()
+  };
+
+  if(existingIdx >= 0) data.months[existingIdx] = entry;
+  else data.months.push(entry);
+
+  // Log to import history
+  importHistory.unshift({
+    date: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+    month, year,
+    files: pendingFiles.map(f=>f.name),
+    surplus: income - expenses
+  });
+  if(importHistory.length > 20) importHistory = importHistory.slice(0,20);
+  localStorage.setItem('import_history', JSON.stringify(importHistory));
+
+  scheduleSave();
+  clearFiles();
+  pendingPreview = null;
+  document.getElementById('ai-preview').style.display = 'none';
+  renderTracker();
+  renderChart();
+  renderImportHistory();
+  showToast(`✓ ${month} ${year} saved to Monthly Tracker!`);
+
+  // Switch to tracker tab to show result
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-tracker').classList.add('active');
+  document.querySelector('[onclick*="tracker"]').classList.add('active');
+}
+
+function cancelImport() {
+  pendingPreview = null;
+  document.getElementById('ai-preview').style.display = 'none';
+}
+
+// ── IMPORT HISTORY ────────────────────────────────────────────────────
+function renderImportHistory() {
+  const body = document.getElementById('import-history-body');
+  if(!importHistory.length) {
+    body.innerHTML = '<div style="font-size:12px;color:var(--gray-400);padding:12px 0">No imports yet.</div>';
+    return;
+  }
+  body.innerHTML = importHistory.map(h => `
+    <div class="import-hist-row">
+      <div>
+        <span style="font-weight:500">${h.month} ${h.year}</span>
+        <span style="color:var(--gray-400);margin-left:8px">${h.files.length} file(s)</span>
+      </div>
+      <div style="text-align:right">
+        <span style="font-weight:600;color:${h.surplus>=0?'var(--green)':'var(--red)'}">${fmt(h.surplus)}</span>
+        <span style="color:var(--gray-400);margin-left:8px">${h.date}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+
+
+(function(){
+  // NOTE: Anthropic key is NOT stored here (GitHub is public).
+  // Enter it once via the AI Import tab → it saves to Firebase and syncs to all devices.
+
+  // Load local snapshot first so page isn't blank while Firebase connects
+  const local = localStorage.getItem('burdin_local');
+  if(local) { try { Object.assign(data, JSON.parse(local)); } catch(e){} }
+  renderAll();
+  initApiKeyUI();
+
+  // If Firebase credentials are hardcoded in FB_CONFIG, connect immediately — no setup needed
+  if(FB_CONFIG.apiKey && FB_CONFIG.databaseURL) {
+    document.getElementById('setup-banner').classList.add('hidden');
+    initFB(FB_CONFIG.apiKey, FB_CONFIG.databaseURL);
+  }
+  // Otherwise show setup banner for first-time configuration
+})();
+</script>
+</body>
+</html>
